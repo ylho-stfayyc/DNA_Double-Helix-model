@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脫氧核糖核酸 (DNA) 雙螺旋立體結構與分子嵌合模型</title>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;       /* 整體背景：柔和淺灰藍 */
+            --card-bg: #ffffff;        /* 卡片容器：純白 */
+            --text-color: #1e293b;     /* 主要文字：深石板灰 */
+            --sub-text: #64748b;       /* 次要文字：中灰調 */
+            --accent: #0284c7;         /* 強調色：明亮專業藍 */
+            --border-color: #cbd5e1;   /* 邊框顏色 */
+            --a-color: #dc2626;        /* 腺嘌呤 (A) - 紅色 */
+            --t-color: #d97706;        /* 胸腺嘧啶 (T) - 深黃色 */
+            --c-color: #2563eb;        /* 胞嘧啶 (C) - 藍色 */
+            --g-color: #16a34a;        /* 鳥嘌呤 (G) - 綠色 */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        p {
+            color: var(--sub-text);
+            margin: 0;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+            max-width: 900px;
+            align-items: center;
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 5px;
+            margin-top: 0;
+            font-size: 1.2rem;
+            width: 100%;
+            text-align: center;
+            color: #0f172a;
+        }
+
+        /* 模組一：2D 旋轉模型樣式 */
+        #canvas-container-2d {
+            width: 100%;
+            height: 420px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: radial-gradient(circle, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+        }
+
+        #canvas-container-2d:active {
+            cursor: grabbing;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            color: var(--sub-text);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-color); font-weight: 500;}
+        .legend-color { width: 12px; height: 12px; border-radius: 50%; }
+
+        /* 模組二：拼圖嵌合練習樣式 */
+        .workspace {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
+            border: 2px dashed var(--border-color);
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .puzzle-piece {
+            position: absolute;
+            width: 120px;
+            height: 50px;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            z-index: 10;
+            filter: drop-shadow(0px 3px 5px rgba(0, 0, 0, 0.15));
+        }
+
+        .puzzle-piece:active {
+            cursor: grabbing;
+            filter: drop-shadow(0px 6px 10px rgba(0, 0, 0, 0.25));
+            z-index: 1000;
+        }
+
+        .left-fixed {
+            cursor: default !important;
+        }
+
+        .snapped {
+            cursor: default !important;
+            transition: left 0.15s ease, top 0.15s ease;
+            z-index: 5 !important;
+        }
+
+        #result-msg {
+            font-weight: bold;
+            font-size: 1rem;
+            min-height: 25px;
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>脫氧核糖核酸 (DNA) 雙螺旋立體結構與分子嵌合模型</h1>
+        <p>分子生物學視覺化模擬實驗手冊：探討核苷酸空間立體構型與 Chargaff 定則之鹼基互補配對機制</p>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- 模組一：2D 旋轉模型 -->
+        <div class="panel">
+            <h2>圖表 1.1：DNA 雙股螺旋三維空間旋轉模型</h2>
+            <div class="instructions">[操作指南] 請以滑鼠左鍵按住畫布或使用觸控裝置水平拖曳，以觀察雙螺旋結構在不同視角下的空間立體構型。</div>
+            
+            <div id="canvas-container-2d">
+                <canvas id="dnaCanvas2D"></canvas>
+            </div>
+
+            <div class="controls">
+                <button class="btn" onclick="toggleAnimation()">暫停 / 恢復自動旋轉</button>
+                <button class="btn" onclick="resetPhase()">重置初始視角</button>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background:var(--a-color)"></div>腺嘌呤 (Adenine, A)</div>
+                <div class="legend-item"><div class="legend-color" style="background:var(--t-color)"></div>胸腺嘧啶 (Thymine, T)</div>
+                <div class="legend-item"><div class="legend-color" style="background:var(--c-color)"></div>胞嘧啶 (Cytosine, C)</div>
+                <div class="legend-item"><div class="legend-color" style="background:var(--g-color)"></div>鳥嘌呤 (Guanine, G)</div>
+            </div>
+        </div>
+
+        <!-- 模組二：拼圖嵌合練習 -->
+        <div class="panel">
+            <h2>實驗 1.2：氮基與氫鍵結之互補配對嵌合模擬實驗</h2>
+            <div class="instructions">[實驗原理] 依據核酸分子結構之互補規則（A 與 T 形成雙氫鍵，C 與 G 形成三氫鍵），請將右側游離之鹼基分子拖曳至左側相應之模板空位進行化學嵌合。</div>
+            
+            <div class="workspace" id="workspace"></div>
+
+            <div id="result-msg">請將右側之鹼基分子拖曳至左側模板以建立互補配對。</div>
+            <button class="btn" onclick="initGame()">重置實驗參數 / 重新洗牌</button>
+        </div>
+
+    </div>
+
+    <script>
+        /* ==================== 模組一：2D 旋轉模型邏輯 ==================== */
+        const canvas = document.getElementById('dnaCanvas2D');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container-2d');
+
+        const baseColors = {
+            'A': '#dc2626',
+            'T': '#d97706',
+            'C': '#2563eb',
+            'G': '#16a34a'
+        };
+
+        const basePairs = [
+            ['A', 'T'], ['C', 'G'], ['G', 'C'], ['T', 'A'],
+            ['A', 'T'], ['C', 'G'], ['G', 'C'], ['T', 'A'],
+            ['A', 'T'], ['C', 'G'], ['G', 'C'], ['T', 'A']
+        ];
+
+        let time = 0;
+        let isAnimating = true;
+        let isDragging = false;
+        let startX = 0;
+
+        function resizeCanvas() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        container.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            isAnimating = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - startX;
+            time += deltaX * 0.02;
+            startX = e.clientX;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        container.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+            isAnimating = false;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.touches[0].clientX - startX;
+            time += deltaX * 0.02;
+            startX = e.touches[0].clientX;
+        });
+
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        function drawDNA() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const totalRows = basePairs.length;
+            const spacingY = 30;
+            const startY = centerY - (totalRows * spacingY) / 2;
+
+            ctx.beginPath();
+            for (let i = 0; i < totalRows; i++) {
+                const y = startY + i * spacingY;
+                const angle = time + i * 0.45;
+                const x = centerX + Math.sin(angle) * 110;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.beginPath();
+            for (let i = 0; i < totalRows; i++) {
+                const y = startY + i * spacingY;
+                const angle = time + i * 0.45 + Math.PI;
+                const x = centerX + Math.sin(angle) * 110;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            basePairs.forEach((pair, i) => {
+                const y = startY + i * spacingY;
+                const angle = time + i * 0.45;
+                
+                const depth1 = Math.cos(angle); 
+                const depth2 = Math.cos(angle + Math.PI);
+
+                const x1 = centerX + Math.sin(angle) * 110;
+                const x2 = centerX + Math.sin(angle + Math.PI) * 110;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y);
+                ctx.lineTo(x2, y);
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 3]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                const items = [
+                    { x: x1, y: y, base: pair[0], depth: depth1 },
+                    { x: x2, y: y, base: pair[1], depth: depth2 }
+                ];
+                items.sort((a, b) => a.depth - b.depth);
+
+                items.forEach(item => {
+                    const scale = 0.75 + (item.depth + 1) * 0.25;
+                    const alpha = 0.5 + (item.depth + 1) * 0.25;
+
+                    ctx.save();
+                    ctx.globalAlpha = alpha;
+
+                    ctx.beginPath();
+                    ctx.arc(item.x, item.y, 7 * scale, 0, Math.PI * 2);
+                    ctx.fillStyle = '#64748b';
+                    ctx.fill();
+
+                    const bx = centerX + (item.x - centerX) * 0.6;
+                    const by = item.y;
+
+                    ctx.beginPath();
+                    ctx.arc(bx, by, 15 * scale, 0, Math.PI * 2);
+                    ctx.fillStyle = baseColors[item.base];
+                    ctx.fill();
+                    ctx.lineWidth = 2 * scale;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `bold ${Math.floor(12 * scale)}px "Segoe UI", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(item.base, bx, by);
+
+                    ctx.restore();
+                });
+            });
+        }
+
+        function animate() {
+            if (isAnimating) {
+                time += 0.02;
+            }
+            drawDNA();
+            requestAnimationFrame(animate);
+        }
+
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+        }
+
+        function resetPhase() {
+            time = 0;
+            isAnimating = true;
+        }
+
+        animate();
+
+
+        /* ==================== 模組二：拼圖嵌合練習邏輯 ==================== */
+        const pairsMap = { 'A': 'T', 'C': 'G' };
+        const puzzleColors = { 'A': '#dc2626', 'T': '#d97706', 'C': '#2563eb', 'G': '#16a34a' };
+
+        function createSvgPiece(type) {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("viewBox", "0 0 120 50");
+            svg.setAttribute("width", "120");
+            svg.setAttribute("height", "50");
+
+            let pathD = "";
+            let textX = 45;
+
+            if (type === 'A') {
+                pathD = "M 5,0 L 95,0 L 80,25 L 95,50 L 5,50 A 5,5 0 0 1 0,45 L 0,5 A 5,5 0 0 1 5,0 Z";
+                textX = 45;
+            } else if (type === 'T') {
+                pathD = "M 0,25 L 15,0 L 115,0 A 5,5 0 0 1 120,5 L 120,45 A 5,5 0 0 1 115,50 L 15,50 Z";
+                textX = 70;
+            } else if (type === 'C') {
+                pathD = "M 5,0 L 95,0 A 25,25 0 0,1 95,50 L 5,50 A 5,5 0 0 1 0,45 L 0,5 A 5,5 0 0 1 5,0 Z";
+                textX = 45;
+            } else if (type === 'G') {
+                pathD = "M 0,25 A 25,25 0 0,0 25,50 L 120,50 L 120,0 L 25,0 A 25,25 0 0,0 0,25 Z";
+                textX = 70;
+            }
+
+            const path = document.createElementNS(svgNS, "path");
+            path.setAttribute("d", pathD);
+            path.setAttribute("fill", puzzleColors[type]);
+
+            const text = document.createElementNS(svgNS, "svg:text");
+            text.setAttribute("x", textX);
+            text.setAttribute("y", "33");
+            text.setAttribute("font-size", "22");
+            text.setAttribute("font-weight", "bold");
+            text.setAttribute("fill", "#ffffff");
+            text.setAttribute("text-anchor", "middle");
+            text.textContent = type;
+
+            svg.appendChild(path);
+            svg.appendChild(text);
+            return svg;
+        }
+
+        function initGame() {
+            const workspace = document.getElementById('workspace');
+            workspace.innerHTML = '';
+            document.getElementById('result-msg').innerText = '實驗進行中：請將游離鹼基嵌合至對應之模板空位。';
+
+            let poolTemplates = ['A', 'A', 'C', 'C'];
+            poolTemplates.sort(() => Math.random() - 0.5);
+
+            poolTemplates.forEach((type, index) => {
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'puzzle-piece left-fixed';
+                leftDiv.dataset.type = type;
+                leftDiv.appendChild(createSvgPiece(type));
+                leftDiv.style.left = '30px';
+                leftDiv.style.top = `${30 + index * 110}px`;
+                workspace.appendChild(leftDiv);
+            });
+
+            let rightTypes = poolTemplates.map(type => pairsMap[type]);
+            rightTypes.sort(() => Math.random() - 0.5);
+
+            rightTypes.forEach((type) => {
+                const rightDiv = document.createElement('div');
+                rightDiv.className = 'puzzle-piece';
+                rightDiv.dataset.type = type;
+                rightDiv.appendChild(createSvgPiece(type));
+
+                const randomX = workspace.clientWidth - 160;
+                const randomY = 30 + Math.random() * 340;
+                rightDiv.style.left = `${randomX}px`;
+                rightDiv.style.top = `${randomY}px`;
+
+                makeDraggable(rightDiv);
+                workspace.appendChild(rightDiv);
+            });
+        }
+
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY;
+
+            element.addEventListener('pointerdown', (e) => {
+                if (element.classList.contains('snapped')) return;
+                isDragging = true;
+                startX = e.clientX - element.offsetLeft;
+                startY = e.clientY - element.offsetTop;
+                element.setPointerCapture(e.pointerId);
+                element.style.zIndex = 1000;
+            });
+
+            element.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                let newX = e.clientX - startX;
+                let newY = e.clientY - startY;
+
+                const workspace = document.getElementById('workspace');
+                const maxX = workspace.clientWidth - element.offsetWidth;
+                const maxY = workspace.clientHeight - element.offsetHeight;
+
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+
+                element.style.left = `${newX}px`;
+                element.style.top = `${newY}px`;
+            });
+
+            element.addEventListener('pointerup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                element.releasePointerCapture(e.pointerId);
+                element.style.zIndex = 10;
+
+                checkSnap(element);
+            });
+        }
+
+        function checkSnap(draggedElement) {
+            const workspace = document.getElementById('workspace');
+            const leftPieces = workspace.querySelectorAll('.left-fixed');
+            
+            let snappedSuccessfully = false;
+
+            leftPieces.forEach((lPiece) => {
+                if (snappedSuccessfully) return;
+                if (lPiece.dataset.matched === "true") return;
+
+                const lType = lPiece.dataset.type; 
+                const isComplementary = pairsMap[lType] === draggedElement.dataset.type;
+
+                if (isComplementary) {
+                    const lLeft = parseInt(lPiece.style.left);
+                    const lTop = parseInt(lPiece.style.top);
+                    
+                    const targetX = lLeft + 80; 
+                    const targetY = lTop;
+
+                    const currentX = parseInt(draggedElement.style.left);
+                    const currentY = parseInt(draggedElement.style.top);
+
+                    const distance = Math.hypot(currentX - targetX, currentY - targetY);
+
+                    if (distance < 80) {
+                        draggedElement.style.left = `${targetX}px`;
+                        draggedElement.style.top = `${targetY}px`;
+                        draggedElement.classList.add('snapped');
+                        lPiece.dataset.matched = "true";
+                        snappedSuccessfully = true;
+                    }
+                }
+            });
+
+            updateGameStatus();
+        }
+
+        function updateGameStatus() {
+            const snappedPieces = document.querySelectorAll('.puzzle-piece.snapped');
+            const successCount = snappedPieces.length;
+
+            const msg = document.getElementById('result-msg');
+            if (successCount === 4) {
+                msg.style.color = '#16a34a';
+                msg.innerText = '✓ 實驗驗證成功：所有鹼基對均已完成正確之互補嵌合。';
+            } else {
+                msg.style.color = '#0284c7';
+                msg.innerText = `實驗進度：已成功嵌合 ${successCount} / 4 組鹼基對。`;
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
